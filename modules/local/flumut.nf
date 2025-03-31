@@ -55,9 +55,9 @@ process FLUMUT {
 
   conda 'bioconda::flumut=0.6.3'
   if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-    container 'https://depot.galaxyproject.org/singularity/flumut:0.6.3--pyhdfd78af_0'
+    container 'https://depot.galaxyproject.org/singularity/flumutdb:6.4--pyhdfd78af_0'
   } else {
-    container 'quay.io/biocontainers/flumut:0.6.3--pyhdfd78af_0'
+    container 'quay.io/biocontainers/flumutdb:6.4--pyhdfd78af_0'
   }
 
   input:

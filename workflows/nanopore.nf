@@ -18,7 +18,8 @@ include { BCF_CONSENSUS; BCFTOOLS_STATS                       } from '../modules
 include { CLAIR3                                              } from '../modules/local/clair3'
 include { MOSDEPTH_GENOME                                     } from '../modules/local/mosdepth'
 include { CAT_NANOPORE_FASTQ                                  } from '../modules/local/misc'
-include { ZSTD_DECOMPRESS as ZSTD_DECOMPRESS_FASTA; ZSTD_DECOMPRESS as ZSTD_DECOMPRESS_CSV } from '../modules/local/zstd_decompress'
+include { ZSTD_DECOMPRESS as ZSTD_DECOMPRESS_FASTA            } from '../modules/local/zstd_decompress'
+include { ZSTD_DECOMPRESS as ZSTD_DECOMPRESS_CSV              } from '../modules/local/zstd_decompress'
 include { CAT_DB                                              } from '../modules/local/misc'
 include { CAT_CONSENSUS                                       } from '../modules/local/misc'
 include { SEQTK_SEQ                                           } from '../modules/local/seqtk_seq'
@@ -36,7 +37,10 @@ include { FLUMUT; PREP_FLUMUT_FASTA                           } from '../modules
 include { GENOFLU                                             } from '../modules/local/genoflu'
 include { CLEAVAGE_SITE                                       } from '../modules/local/cleavage_site'
 include { MULTIQC                                             } from '../modules/local/multiqc'
-include { MQC_VERSIONS_TABLE } from '../modules/local/mqc_versions_table'
+include { MQC_VERSIONS_TABLE                                  } from '../modules/local/mqc_versions_table'
+include { GENIN2                                              } from '../modules/local/genin2'
+// SUBWORKFLOWS
+include { NEXTCLADE } from '../subworkflows/nextclade'
 
 def pass_sample_reads = [:]
 def fail_sample_reads = [:]
@@ -298,9 +302,24 @@ workflow NANOPORE {
     ch_versions = ch_versions.mix(BLASTN_REPORT.out.versions)
   }
 
-  PREP_FLUMUT_FASTA(CAT_CONSENSUS.out.consensus_fasta.collect({ it[1] }))
-  FLUMUT(PREP_FLUMUT_FASTA.out.fasta)
-  ch_versions = ch_versions.mix(FLUMUT.out.versions)
+  if (!params.skip_flumut || !params.skip_genin2) {
+    PREP_FLUMUT_FASTA(CAT_CONSENSUS.out.consensus_fasta.collect({ it[1] }))
+  }
+  if (!params.skip_flumut) {
+    FLUMUT(PREP_FLUMUT_FASTA.out.fasta)
+    ch_versions = ch_versions.mix(FLUMUT.out.versions)
+  }
+  if (!params.skip_genin2) {
+    GENIN2(PREP_FLUMUT_FASTA.out.fasta)
+    ch_versions = ch_versions.mix(GENIN2.out.versions)
+  }
+  if (!params.skip_nextclade) {
+    NEXTCLADE(
+      ch_cat_consensus_fasta,
+      params.nextclade_datasets_csv
+    )
+    ch_versions = ch_versions.mix(NEXTCLADE.out.versions)
+  }
 
   workflow_summary    = Schema.params_summary_multiqc(workflow, summary_params)
   ch_workflow_summary = Channel.value(workflow_summary)

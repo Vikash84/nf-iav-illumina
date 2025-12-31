@@ -3,7 +3,48 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [[3.8.0]](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.7.0)] - 2025-03-25
+## [[3.10.1](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.10.1)] - 2025-09-15
+
+This patch release updates `nextflow_schema.json`, removing a duplicate `FLU` option from the `irma_module` ENUM. This fix is necessary in order to allow the pipeline to be launched using Seqera Platform.
+
+## [[3.10.0](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.10.0)] - 2025-07-30
+
+This minor release adds Genin2, updates Clair3 and fixes Nextclade consolidated output to use the correct Nextclade dataset tag/version.
+
+### Changes
+
+* feat: add Genin2 for European clade 2.3.4.4b H5Nx genotype prediction to the `illumina`, `nanopore` and `assemblies` workflows (i.e. `--platform illumina/nanopore/assemblies`).
+* update: update Clair3 to 1.1.2 to fix a potential issue when using the `--enable_variant_calling_at_sequence_head_and_tail` option (#116)
+* fix: Nextclade dataset tag/version used in consolidated tabular output file.
+* dev: add `run-assemblies-test.sh` and update `run-*-test.sh` scripts in `tests/`. Better default `--outdir` for each test script and downloading of VADR model prior to running workflow to allow sharing of model tar.gz between different tests.
+
+## [[3.9.0](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.9.0)] - 2025-04-07
+
+This minor release adds Nextclade analysis of assembled Influenza genome sequences against 30 Nextclade Influenza-related datasets by default and updates the Influenza sequences used by nf-flu (downloaded from NCBI 2025-04-04; 809,739 unique sequences and metadata).
+
+The specific Nextclade datasets and optionally versions (tags) can be configured with a headerless CSV file. Nextclade results are aggregrated across samples and datasets and filtered for positive results into a single Nextclade TSV (tab-separated values) report with additional fields capturing sample, dataset name and dataset version/tag information as well as Nextclade and Nextclade dataset specific results.
+
+### Changes
+
+* update: Influenza sequences and metadata from NCBI (2025-04-04). 809,739 non-redundant, unique sequences were retrieved along with their metadata. Added documentation for how to update Influenza sequences for use with nf-flu (see [docs/update_seqs_db.md](docs/update_seqs_db.md))
+* feat: added Nextclade (v3.12.0) analysis subworkflow against 30 Influenza-related Nextclade datasets with a convenient aggregation and summarization of useful results into a single Nextclade TSV report.
+* update: GenoFLU 1.05 -> 1.06 (#112)
+
+## [[3.8.1](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.8.1)] - 2025-03-26
+
+This patch release updates Clair3, the variant caller for Nanopore sequence data, to 1.0.11. Clair 1.0.11 adds an option to enable variant calling at the head and tail 16bp of each sequence (`--enable_variant_calling_at_sequence_head_and_tail`). This option is enabled by default in the nf-flu workflow to ensure that the 16bp at the start and end of each of the 8 segments of IAV and IBV are variant called. It should be noted that the developers of Clair3 note that results are used "with caution because alignments are less reliable in the regions, and there would be insufficient context to be fed to the neural network for reliable calling".
+
+A minor issue with the MultiQC report was also fixed where sample names were not cleaned properly. The `.bcftools_filt` extension was added to `extra_fn_clean_exts` in `assets/multiqc_config.yaml`.
+
+### Changes
+
+* fix: MultiQC report sample name cleaning. Added `.bcftools_filt` to `extra_fn_clean_exts` in `assets/multiqc_config.yaml`.
+* update: Clair3 1.0.10 -> 1.0.11
+* fix: Clair3 not variant calling the ends of each segment enable variant calling at the head and tail 16bp of each sequence (`--enable_variant_calling_at_sequence_head_and_tail`) (#61)
+* dev: move Clair3 arguments and options to `conf/modules_nanopore.config`. This should allow users to change Clair3 options more easily using custom Nextflow config files (e.g. `nextflow run CFIA-NCFAD/nf-flu -c clair3-custom.config ...`).
+* test: added nf-test for `clair3.nf` to with simulated test data for head and tail variant calling with the `--enable_variant_calling_at_sequence_head_and_tail` option.
+
+## [[3.8.0](https://github.com/CFIA-NCFAD/nf-flu/releases/tag/3.8.0)] - 2025-03-25
 
 This release adds the `--platform assemblies` mode for analysis of FASTA sequences along with `--input /path/to/fasta-dir/` to specify the directory containing the FASTA sequences.
 
